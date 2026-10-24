@@ -581,6 +581,35 @@ test('findAndReplace', async function (t) {
       })
     }
   )
+
+  await t.test(
+    'should handle parents with many children efficiently',
+    async function () {
+      const count = 30_000
+      /** @type {Array<import('mdast').PhrasingContent>} */
+      const children = []
+      let index = -1
+      while (++index < count) {
+        children.push({type: 'text', value: 'item '})
+      }
+
+      /** @type {Root} */
+      const tree = {
+        type: 'root',
+        children: [{type: 'paragraph', children}]
+      }
+      findAndReplace(tree, [/item/g, 'element'])
+      const paragraph = /** @type {Paragraph} */ (tree.children[0])
+      const firstChild = /** @type {import('mdast').Text} */ (
+        paragraph.children[0]
+      )
+      const lastChild = /** @type {import('mdast').Text} */ (
+        paragraph.children[count - 1]
+      )
+      assert.equal(firstChild.value, 'element ')
+      assert.equal(lastChild.value, 'element ')
+    }
+  )
 })
 
 /**
